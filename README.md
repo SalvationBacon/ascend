@@ -2,7 +2,14 @@
 
 A personal level-up fitness tracker. Clear your Daily Quest, earn XP, raise your stats and climb from E-Rank to S-Rank. Skip a day and a Penalty Quest shows up.
 
-It's one self-contained file: `index.html`. No build step, no dependencies, no account.
+**Live app:** https://salvationbacon.github.io/ascend/
+
+## Install it on your phone
+
+- **iPhone (Safari):** open the link, tap **Share**, then **Add to Home Screen**.
+- **Android (Chrome):** open the link, then tap **Install app** in the banner or the ⋮ menu. You can also use **System → Install app** inside Ascend.
+
+Once installed, it opens full screen with its own icon and works offline.
 
 ## Features
 
@@ -20,11 +27,31 @@ It's one self-contained file: `index.html`. No build step, no dependencies, no a
 - **Auto difficulty**: suggests moving up a difficulty after 14 cleared days in a row.
 - **Backup**: copy your whole save as text and restore it on any device.
 
-## Running it
-
-Open `index.html` in a browser, or host it with GitHub Pages (Settings → Pages → deploy from `main`).
-
 ## Where your data lives
 
-- **Opened as a Claude artifact:** progress syncs to your Claude account, and the AI coach and AI-generated Gates work.
-- **Opened anywhere else** (a local file, GitHub Pages): progress is saved in that browser's local storage. The AI features show as unavailable. Use **System → Copy backup** to move your save between devices.
+- **Web app (GitHub Pages):** saved in that browser's storage on your phone. Use **System → Copy backup** now and then, and paste the text somewhere safe. If you clear site data or switch phones, **Restore backup** brings it back.
+- **Claude artifact version:** syncs to your Claude account. The AI coach and AI-generated Gates only work there.
+
+## Files
+
+| File | What it is |
+|---|---|
+| `app.html` | The app's source. Edit this one. It's also what the Claude artifact publishes. |
+| `index.html` | The installable web app, **generated** from `app.html`. Don't edit by hand. |
+| `manifest.webmanifest` | App name, colors and icons for installing. |
+| `sw.js` | Service worker that makes it work offline. |
+| `icons/` | `icon.svg` is the source art; the PNGs are generated from it. |
+| `tools/build.py` | Rebuilds `index.html` and updates the service worker version. |
+| `tools/make-icons.js` | Renders the PNG icons from `icons/icon.svg` (needs Playwright). |
+
+After changing `app.html`:
+
+```sh
+python3 tools/build.py
+```
+
+After changing `icons/icon.svg`:
+
+```sh
+node tools/make-icons.js
+```
