@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#060a13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Ascend</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one phone-width column of glowing "system windows", fixed tab bar at the bottom. Deliberately single dark theme. */
+:root{
+  --bg:#060a13;
+  --bg2:#0b1424;
+  --panel:rgba(12,24,46,.82);
+  --line:#2f7dff;
+  --glow:#7cc4ff;
+  --fg:#dce9ff;
+  --muted:#8197bb;
+  --gold:#f3c35a;
+  --red:#ff5468;
+  --green:#4fe3a6;
+  --f-display:"Chakra Petch","Rajdhani","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  background:radial-gradient(120% 60% at 50% -10%,#10284d 0%,var(--bg) 60%) fixed,var(--bg);
+  color:var(--fg);font:15px/1.5 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:16px calc(92px + env(safe-area-inset-bottom,0px));
+  -webkit-tap-highlight-color:transparent;
+}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(0deg,rgba(124,196,255,.025) 0 1px,transparent 1px 3px)}
+#app{position:relative;z-index:1;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--f-display);margin:0;letter-spacing:.04em;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.win{
+  position:relative;background:var(--panel);border:1px solid rgba(124,196,255,.45);
+  box-shadow:0 0 0 1px rgba(47,125,255,.15) inset,0 0 24px rgba(47,125,255,.18);
+  padding:16px;backdrop-filter:blur(6px);
+  clip-path:polygon(0 10px,10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%);
+}
+.win.red{border-color:rgba(255,84,104,.6);box-shadow:0 0 0 1px rgba(255,84,104,.2) inset,0 0 28px rgba(255,84,104,.22);background:rgba(40,10,18,.82)}
+.win.gold{border-color:rgba(243,195,90,.6);box-shadow:0 0 0 1px rgba(243,195,90,.18) inset,0 0 26px rgba(243,195,90,.18)}
+.tag{display:inline-flex;align-items:center;gap:6px;font:600 11px/1 var(--f-display);letter-spacing:.18em;text-transform:uppercase;color:var(--glow)}
+.win.red .tag{color:var(--red)} .win.gold .tag{color:var(--gold)}
+.tag::before{content:"";width:6px;height:6px;background:currentColor;box-shadow:0 0 8px currentColor;transform:rotate(45deg)}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.title{font:700 20px/1.2 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.bar{height:8px;background:rgba(124,196,255,.12);position:relative;overflow:hidden}
+.bar>i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--line),var(--glow));box-shadow:0 0 10px var(--glow);transition:width .4s ease}
+.bar.hp>i{background:linear-gradient(90deg,#c9334a,var(--red));box-shadow:0 0 10px var(--red)}
+.bar.mp>i{background:linear-gradient(90deg,#2a49d8,#6c8dff)}
+.bar.gold>i{background:linear-gradient(90deg,#c48a1d,var(--gold));box-shadow:0 0 10px var(--gold)}
+.btn{background:rgba(47,125,255,.14);border:1px solid rgba(124,196,255,.5);padding:9px 14px;font:600 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--fg)}
+.btn:hover{background:rgba(47,125,255,.28)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--line);border-color:var(--glow);box-shadow:0 0 16px rgba(47,125,255,.5)}
+.btn.red{border-color:var(--red);background:rgba(255,84,104,.15)}
+.btn.gold{border-color:var(--gold);background:rgba(243,195,90,.14);color:var(--gold)}
+.btn.sm{padding:7px 10px;font-size:12px}
+.btn[disabled]{opacity:.4;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+input,select,textarea{background:rgba(5,12,24,.8);border:1px solid rgba(124,196,255,.35);color:var(--fg);font:inherit;padding:9px 10px;width:100%;border-radius:0}
+label{font:600 11px/1.4 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+
+/* status */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.lvl{width:92px;height:92px;display:grid;place-items:center;border:1px solid var(--glow);position:relative;background:radial-gradient(circle,rgba(47,125,255,.35),transparent 70%)}
+.lvl b{font:700 40px/1 var(--f-display);text-shadow:0 0 14px var(--glow)}
+.lvl small{position:absolute;top:6px;font:600 10px/1 var(--f-display);letter-spacing:.2em;color:var(--muted)}
+.rank{display:inline-grid;place-items:center;min-width:34px;height:34px;padding:0 6px;font:700 20px/1 var(--f-display);border:1px solid currentColor;text-shadow:0 0 10px currentColor}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv dt{color:var(--muted);font:600 11px/1.9 var(--f-display);letter-spacing:.14em;text-transform:uppercase}
+.kv dd{margin:0;min-width:0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px}
+.stat{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(124,196,255,.15)}
+.stat b{font:700 13px/1 var(--f-display);letter-spacing:.14em;width:36px}
+.stat .v{font:700 18px/1 var(--f-mono);flex:1}
+.plus{width:28px;height:28px;border:1px solid var(--gold);background:rgba(243,195,90,.12);color:var(--gold);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid rgba(124,196,255,.35);padding:5px 9px;font-size:12px;background:transparent;color:var(--muted)}
+.chip.on{border-color:var(--gold);color:var(--gold);box-shadow:0 0 10px rgba(243,195,90,.25)}
+.chip.locked{opacity:.35}
+
+/* quests */
+.timer{font:700 26px/1 var(--f-mono);letter-spacing:.06em;color:var(--fg);text-shadow:0 0 12px var(--glow)}
+.ex{display:grid;gap:6px;padding:12px 0;border-top:1px dashed rgba(124,196,255,.2)}
+.ex:first-of-type{border-top:0}
+.ex .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.ex .name{font:600 15px/1.2 var(--f-display);letter-spacing:.05em}
+.ex .cnt{font:700 15px/1 var(--f-mono)}
+.ex.done .cnt{color:var(--green)}
+.ex.done .bar>i{background:var(--green);box-shadow:0 0 10px var(--green)}
+.steps{display:flex;gap:6px}
+.steps .btn{flex:1;padding:8px 0}
+.warn{font-size:12.5px;color:var(--red);margin-top:10px;letter-spacing:.02em}
+.reward{font-size:12.5px;color:var(--muted);margin-top:8px}
+.reward b{color:var(--gold);font-weight:600}
+.check{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px dashed rgba(124,196,255,.2)}
+.check:first-child{border-top:0}
+.box{width:24px;height:24px;border:1px solid var(--glow);display:grid;place-items:center;flex:none;background:transparent}
+.box.on{background:var(--glow);box-shadow:0 0 12px var(--glow);color:var(--bg);font-weight:800}
+.sname{flex:1;min-width:0;overflow-wrap:anywhere}
+.stag{font:600 10px/1 var(--f-display);letter-spacing:.16em;color:var(--muted);border:1px solid rgba(124,196,255,.3);padding:4px 6px}
+.x{background:none;border:0;color:var(--muted);font-size:18px;padding:0 4px}
+.stamp{font:700 13px/1 var(--f-display);letter-spacing:.2em;color:var(--green);border:1px solid var(--green);padding:6px 10px;text-shadow:0 0 8px var(--green)}
+
+/* gates */
+.gate{display:grid;gap:8px}
+.gate + .gate{border-top:1px dashed rgba(124,196,255,.2);padding-top:14px;margin-top:14px}
+.gate .gt{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.gate h3{font-size:16px}
+.gate ul{margin:0;padding-left:18px;color:var(--fg);font-size:14px}
+.gate.locked{opacity:.4}
+
+/* log */
+.heat{display:grid;grid-template-columns:repeat(15,1fr);gap:4px}
+.heat i{aspect-ratio:1;max-width:100%;background:rgba(124,196,255,.08);display:block}
+.heat i.d{background:var(--glow);box-shadow:0 0 6px rgba(124,196,255,.6)}
+.heat i.r{background:#3a4f7a}
+.heat i.p{background:rgba(124,196,255,.35)}
+.heat i.m{background:rgba(255,84,104,.35)}
+.heat i.t{outline:1px solid var(--gold)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;display:inline-block}
+.totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.totals div{border:1px solid rgba(124,196,255,.2);padding:10px}
+.totals b{display:block;font:700 20px/1.1 var(--f-mono)}
+.totals span{font:600 10px/1 var(--f-display);letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+
+/* nav */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(6,10,19,.94);border-top:1px solid rgba(124,196,255,.35);
+  padding:8px max(8px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+nav .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+nav button{background:none;border:1px solid transparent;padding:8px 0;font:600 10px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:6px;position:relative}
+nav button svg{width:20px;height:20px}
+nav button.on{color:var(--glow);border-color:rgba(124,196,255,.4);background:rgba(47,125,255,.1)}
+nav .dot{position:absolute;top:4px;right:22%;width:7px;height:7px;background:var(--red);box-shadow:0 0 8px var(--red)}
+
+/* rest timer */
+#restsheet{position:fixed;z-index:30;left:0;right:0;bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+#restsheet .win{max-width:480px;margin:0 auto;background:rgba(8,16,32,.97)}
+.rt-time{font:700 44px/1 var(--f-mono);text-align:center;letter-spacing:.04em;text-shadow:0 0 16px var(--glow);margin:4px 0 10px}
+.rt-presets{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}
+.rt-presets .btn{padding:9px 0}
+/* boss */
+.boss-name{font:700 24px/1.1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--red);text-shadow:0 0 14px rgba(255,84,104,.5)}
+/* body chart */
+.chart-wrap{position:relative;margin-top:6px}
+.chart-wrap svg{display:block;width:100%;height:auto;max-width:100%;touch-action:pan-y}
+.tip{position:absolute;top:0;pointer-events:none;background:rgba(6,12,24,.96);border:1px solid rgba(124,196,255,.5);padding:6px 9px;font-size:12px;white-space:nowrap;transform:translateX(-50%)}
+.tip b{font-family:var(--f-mono);font-size:14px;display:block}
+.big{font:700 30px/1 var(--f-mono)}
+.delta-dn{color:var(--green)} .delta-up{color:var(--gold)}
+table.mt{width:100%;border-collapse:collapse;font-size:13.5px}
+table.mt th{font:600 10px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid rgba(124,196,255,.2)}
+table.mt th:first-child,table.mt td:first-child{text-align:left}
+table.mt td{padding:8px 4px;text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;border-bottom:1px dashed rgba(124,196,255,.12)}
+table.mt td:first-child{font-family:var(--f-body)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.coach-out{display:grid;gap:10px}
+.coach-out h3{font-size:18px}
+.coach-out p{margin:0}
+.err{color:var(--red);font-size:13px;margin:8px 0 0}
+/* notices */
+#notices{position:fixed;inset:0;pointer-events:none;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 24px}
+.notice{pointer-events:auto;width:min(360px,100%);text-align:center;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.notice .t{font:700 13px/1 var(--f-display);letter-spacing:.3em;color:var(--glow);margin-bottom:8px}
+.notice.gold .t{color:var(--gold)} .notice.red .t{color:var(--red)}
+.notice .m{font:600 17px/1.35 var(--f-display);letter-spacing:.04em}
+.notice .s{font-size:13px;color:var(--muted);margin-top:6px}
+@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+.notice.out{animation:out .3s forwards}
+@keyframes out{to{opacity:0;transform:translateY(-12px)}}
+.modal{position:fixed;inset:0;z-index:40;background:rgba(3,6,12,.82);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));overflow:auto}
+.modal .win{width:min(440px,100%)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.opt{display:block;text-align:left;width:100%;padding:12px;border:1px solid rgba(124,196,255,.3);background:transparent}
+.opt.on{border-color:var(--glow);background:rgba(47,125,255,.16);box-shadow:0 0 14px rgba(47,125,255,.3)}
+.opt b{font:700 15px/1.3 var(--f-display);letter-spacing:.06em;display:block}
+.opt span{font-size:13px;color:var(--muted)}
+.splash{min-height:60vh;display:grid;place-items:center;text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app"><div class="splash"><div><div class="tag">System</div><p class="muted">Connecting…</p></div></div></div>
+<div id="notices" aria-live="polite"></div>
+<div id="restsheet" hidden></div>
+<nav id="nav" hidden><div class="in"></div></nav>
+
+<script>
+(() => {
+"use strict";
+/* ---------- data tables ---------- */
+const EX = {
+  pushups:{name:"Push-ups",unit:"reps",stat:"str",steps:[1,5,10],round:5},
+  situps:{name:"Sit-ups",unit:"reps",stat:"vit",steps:[1,5,10],round:5},
+  squats:{name:"Squats",unit:"reps",stat:"agi",steps:[1,5,10],round:5},
+  run:{name:"Run",unit:"km",stat:"agi",steps:[0.25,0.5,1],round:0.5},
+  plank:{name:"Plank",unit:"sec",stat:"vit",steps:[15,30,60],round:15},
+  pullups:{name:"Pull-ups",unit:"reps",stat:"str",steps:[1,3,5],round:1},
+  burpees:{name:"Burpees",unit:"reps",stat:"vit",steps:[1,5,10],round:5},
+  steps:{name:"Steps",unit:"steps",stat:"agi",steps:[500,1000,2500],round:500},
+};
+const DIFF = {
+  civilian:{name:"Civilian",desc:"Just starting. Short sets, short run.",base:{pushups:20,situps:20,squats:30,run:1,plank:60,pullups:5,burpees:15,steps:5000},pen:{burpees:20,plank:90}},
+  trained:{name:"Trained",desc:"You work out sometimes and can push.",base:{pushups:50,situps:50,squats:50,run:3,plank:120,pullups:15,burpees:30,steps:8000},pen:{burpees:40,plank:180}},
+  athlete:{name:"Athlete",desc:"The classic 100 / 100 / 100 / 10 km.",base:{pushups:100,situps:100,squats:100,run:10,plank:240,pullups:30,burpees:60,steps:12000},pen:{burpees:80,plank:300}},
+};
+const STATS = {str:"Strength",agi:"Agility",vit:"Vitality",sen:"Sense",int:"Intellect"};
+const RANKS = [
+  {r:"E",min:1,color:"#9fb3d1"},{r:"D",min:10,color:"#6fd3a0"},{r:"C",min:20,color:"#5fb4ff"},
+  {r:"B",min:35,color:"#a98bff"},{r:"A",min:50,color:"#ff9b52"},{r:"S",min:70,color:"#f3c35a"},
+];
+const GATES = [
+  {id:"e1",rank:0,name:"Rat Tunnels",xp:120,stat:"str",list:["3 rounds: 10 push-ups, 15 squats, 20 jumping jacks"]},
+  {id:"e2",rank:0,name:"Flooded Stairwell",xp:120,stat:"agi",list:["10 min brisk walk or jog","30 walking lunges","5 flights of stairs"]},
+  {id:"d1",rank:1,name:"Iron Quarry",xp:200,stat:"str",list:["5 rounds: 15 push-ups, 20 squats, 30 s plank"]},
+  {id:"d2",rank:1,name:"Night Market Chase",xp:200,stat:"agi",list:["3 km run, or 20 min nonstop"]},
+  {id:"c1",rank:2,name:"Sunken Keep",xp:320,stat:"vit",list:["100 push-ups, 100 squats, 50 burpees","Split them however you like"]},
+  {id:"c2",rank:2,name:"Wind Ridge",xp:320,stat:"agi",list:["5 km run under 35 minutes"]},
+  {id:"b1",rank:3,name:"Red Furnace",xp:450,stat:"vit",list:["Every minute for 20 minutes: 10 burpees","Rest the remainder of each minute"]},
+  {id:"b2",rank:3,name:"Glass Canyon",xp:450,stat:"str",list:["10 rounds: 10 pull-ups (or rows), 20 push-ups, 30 squats"]},
+  {id:"a1",rank:4,name:"Frost Citadel",xp:600,stat:"agi",list:["10 km run"]},
+  {id:"s1",rank:5,name:"Throne of Ash",xp:900,stat:"str",list:["1.6 km run","100 pull-ups, 200 push-ups, 300 squats (any split)","1.6 km run"]},
+];
+const TITLES = [
+  {id:"awakened",name:"The Awakened",desc:"Clear your first Daily Quest"},
+  {id:"persist",name:"Persistent",desc:"3-day streak"},
+  {id:"iron",name:"Iron Will",desc:"7-day streak"},
+  {id:"unbroken",name:"Unbreakable",desc:"30-day streak"},
+  {id:"survivor",name:"Penalty Survivor",desc:"Clear a Penalty Quest"},
+  {id:"gate1",name:"Gate Crawler",desc:"Clear your first Gate"},
+  {id:"gate10",name:"Gatebreaker",desc:"Clear 10 Gates"},
+  {id:"century",name:"Thousand Fists",desc:"1,000 lifetime push-ups"},
+  {id:"marathon",name:"Road Runner",desc:"42 km lifetime running"},
+  {id:"early",name:"Early Riser",desc:"Clear the Daily Quest before 8 am"},
+  {id:"owl",name:"Night Hunter",desc:"Clear the Daily Quest after 10 pm"},
+  {id:"scholar",name:"Scholar",desc:"Reach 30 Intellect"},
+  {id:"slayer",name:"Boss Slayer",desc:"Defeat a Weekly Boss"},
+  {id:"warlord",name:"Warlord",desc:"Defeat 10 Weekly Bosses"},
+  {id:"reborn",name:"Reborn",desc:"Complete the Job Change Quest"},
+  {id:"mirror",name:"Self-Aware",desc:"Log 10 body check-ins"},
+  {id:"rankD",name:"D-Rank Hunter",desc:"Pass the D-Rank Trial"},
+  {id:"rankC",name:"C-Rank Hunter",desc:"Pass the C-Rank Trial"},
+  {id:"rankB",name:"B-Rank Hunter",desc:"Pass the B-Rank Trial"},
+  {id:"rankA",name:"A-Rank Hunter",desc:"Pass the A-Rank Trial"},
+  {id:"rankS",name:"S-Rank Hunter",desc:"Pass the S-Rank Trial"},
+];
+const JOB_LEVEL = 40;
+const JOBS = {
+  pathfinder:{name:"Pathfinder",desc:"Endurance path. Longer runs and more steps.",stat:"agi",add:["run","steps"],mult:{run:1.3,steps:1.25},trial:["Run 5 km in one go"]},
+  juggernaut:{name:"Juggernaut",desc:"Strength path. Heavier pushing and pulling.",stat:"str",add:["pushups","pullups"],mult:{pushups:1.25,pullups:1.25},trial:["150 push-ups and 30 pull-ups in one session"]},
+  brawler:{name:"Brawler",desc:"Conditioning path. Burpees and core work.",stat:"vit",add:["burpees","plank"],mult:{burpees:1.25,plank:1.25},trial:["100 burpees in one session","A 3-minute plank (breaks allowed)"]},
+  ascetic:{name:"Ascetic",desc:"Discipline path. Side Quests give double XP and stats.",stat:"sen",add:["plank"],mult:{},sideX:2,trial:["Clear every Side Quest today","A 5-minute plank (breaks allowed)"]},
+};
+const BOSSES = [
+  {id:"colossus",name:"Stone Colossus",lore:"A walking quarry. Break it piece by piece.",t:{pushups:100,squats:150,plank:180}},
+  {id:"hydra",name:"Marsh Hydra",lore:"Every head you cut grows back unless you keep moving.",t:{burpees:60,situps:120,run:3}},
+  {id:"warden",name:"Iron Warden",lore:"It guards the upper floors. Pull yourself past it.",t:{pushups:150,pullups:30,plank:240}},
+  {id:"wyrm",name:"Storm Wyrm",lore:"Outrun the lightning, then stand your ground.",t:{run:5,squats:200,burpees:40}},
+  {id:"hollow",name:"Hollow King",lore:"A tyrant of attrition. Total war on every muscle.",t:{pushups:120,situps:120,squats:120,burpees:30}},
+  {id:"stag",name:"Ember Stag",lore:"It never stops running. Neither can you.",t:{steps:15000,squats:150,plank:180}},
+];
+const BOSS_MULT = {civilian:.5,trained:1,athlete:2};
+const ICONS = {
+  body:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20l2-13h12l2 13z"/><path d="M9 11a3 3 0 0 1 6 0"/><path d="M12 11l1.5-1.5"/></svg>',
+  status:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  quests:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',
+  gates:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="12" rx="6" ry="9"/><ellipse cx="12" cy="12" rx="2.5" ry="5"/></svg>',
+  log:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="5" height="5"/><rect x="10" y="3" width="5" height="5"/><rect x="17" y="3" width="4" height="5"/><rect x="3" y="10" width="5" height="5"/><rect x="10" y="10" width="5" height="5"/><rect x="3" y="17" width="5" height="4"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
+};
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const dk = (d=new Date()) => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const fromKey = k => { const [y,m,d]=k.split("-").map(Number); return new Date(y,m-1,d); };
+const addDays = (k,n) => { const d=fromKey(k); d.setDate(d.getDate()+n); return dk(d); };
+const weekKey = k => { const d=fromKey(k); const wd=(d.getDay()+6)%7; d.setDate(d.getDate()-wd); return dk(d); };
+const fmt = (n,unit) => unit==="km" ? (Math.round(n*100)/100).toString() : Math.round(n).toLocaleString();
+const xpNeed = lvl => 50 + lvl*40;
+const rankIdxForLevel = lvl => { let i=0; RANKS.forEach((r,j)=>{ if(lvl>=r.min) i=j; }); return i; };
+const levelCap = s => s.rankIdx+1 < RANKS.length ? RANKS[s.rankIdx+1].min : Infinity;
+
+/* ---------- state ---------- */
+const LS = "ascend.save.v1";
+let S = null;
+let tab = "quests";
+let resetArm = false;
+const cloud = {ref:null,status:"local",writing:false,dirty:false,timer:null};
+
+function newState(name,diff,exercises){
+  const today = dk();
+  return {v:1,name,diff,exercises,created:today,updatedAt:Date.now(),
+    level:1,xp:0,totalXp:0,rankIdx:0,freePts:0,
+    stats:{str:10,agi:10,vit:10,sen:10,int:10},
+    days:{},side:[
+      {id:"s"+Date.now()+"a",name:"Drink 2 L of water",stat:"vit"},
+      {id:"s"+Date.now()+"b",name:"Read 10 pages",stat:"int"},
+      {id:"s"+Date.now()+"c",name:"10 min stretching",stat:"agi"},
+    ],
+    penalty:null,titles:[],title:null,totals:{},gatesCleared:0,
+    lastDay:today,rest:{},autoScale:true,custom:{},sound:true,
+    job:null,boss:null,bossKills:0,body:[],units:"metric",coach:null,aiGate:null};
+}
+function migrate(s){
+  if(!s) return s;
+  const def={job:null,boss:null,bossKills:0,body:[],units:"metric",coach:null,aiGate:null,custom:{},totals:{},rest:{},titles:[]};
+  Object.keys(def).forEach(k=>{ if(s[k]===undefined) s[k]=def[k]; });
+  return s;
+}
+const jobAdds = () => S.job && JOBS[S.job] ? JOBS[S.job].add : [];
+const exList = () => [...new Set([...S.exercises,...jobAdds()])];
+const baseOf = id => (S.custom && S.custom[id]) || DIFF[S.diff].base[id];
+const isWeekend = () => { const g=new Date().getDay(); return g===0||g===6; };
+function ensureBoss(){
+  const w=weekKey(dk());
+  if(S.boss && S.boss.week===w) return S.boss;
+  const idx=((Math.round(fromKey(w).getTime()/(7*864e5)))%BOSSES.length+BOSSES.length)%BOSSES.length;
+  const b=BOSSES[idx], m=BOSS_MULT[S.diff]*(1+S.rankIdx*0.15), t={};
+  Object.keys(b.t).forEach(id=>{ const r=EX[id].round; t[id]=Math.max(r,Math.round(b.t[id]*m/r)*r); });
+  S.boss={week:w,id:b.id,c:{},t,defeated:false};
+  return S.boss;
+}
+function day(k=dk()){
+  if(!S.days[k]) S.days[k]={c:{},t:{},done:false,side:{},gates:{},rest:false};
+  const d=S.days[k];
+  if(k===dk()) exList().forEach(id=>{ if(d.t[id]==null) d.t[id]=target(id); });
+  return d;
+}
+// 2% per level up to 2x at level 51, then 1% per level up to 3x at level 151
+const levelMult = L => L<=51 ? 1+(L-1)*0.02 : Math.min(3, 2+(L-51)*0.01);
+const DIFF_ORDER = ["civilian","trained","athlete"];
+function cleared14(){
+  for(let i=1;i<=14;i++){ const d=S.days[addDays(dk(),-i)]; if(!(d&&d.done)) return false; }
+  return true;
+}
+function diffSuggestion(){
+  const i=DIFF_ORDER.indexOf(S.diff);
+  if(i<0 || i>=DIFF_ORDER.length-1) return null;
+  if(S.diffSnooze && dk()<S.diffSnooze) return null;
+  return cleared14() ? DIFF_ORDER[i+1] : null;
+}
+function target(id){
+  const jm = S.job && JOBS[S.job] && JOBS[S.job].mult[id] || 1;
+  const base = baseOf(id)*jm;
+  const r = EX[id].round;
+  if(!S.autoScale) return Math.max(r, Math.round(base/r)*r);
+  const m = levelMult(S.level);
+  return Math.max(r, Math.round(base*m/r)*r);
+}
+function streak(){
+  const ok = k => S.days[k] && (S.days[k].done || S.days[k].rest);
+  let k=dk(); if(!ok(k)) k=addDays(k,-1);
+  let n=0; while(ok(k)){ n++; k=addDays(k,-1); }
+  return n;
+}
+function rollover(){
+  const today=dk();
+  if(S.lastDay===today) return false;
+  const y=addDays(today,-1);
+  const yd=S.days[y];
+  if(S.created<=y && !(yd && (yd.done||yd.rest)) && !S.penalty){
+    const p=DIFF[S.diff].pen, m=levelMult(S.level);
+    const sc=(v,r)=>Math.max(r,Math.round(v*m/r)*r);
+    S.penalty={since:today,c:{burpees:0,plank:0},t:{burpees:sc(p.burpees,5),plank:sc(p.plank,15)}};
+    setTimeout(()=>notice("WARNING","Penalty Quest issued","Yesterday's Daily Quest was not cleared. XP gains are halved until you survive it.","red"),400);
+  }
+  // prune very old days
+  const cutoff=addDays(today,-420);
+  Object.keys(S.days).forEach(k=>{ if(k<cutoff) delete S.days[k]; });
+  S.lastDay=today;
+  day(today);
+  ensureBoss();
+  return true;
+}
+
+/* ---------- persistence ---------- */
+function loadLocal(){ try{ const r=localStorage.getItem(LS); return r?JSON.parse(r):null; }catch(e){ return null; } }
+function saveLocal(){ try{ localStorage.setItem(LS,JSON.stringify(S)); }catch(e){} }
+function persist(){
+  S.updatedAt=Date.now(); saveLocal(); cloud.dirty=true;
+  clearTimeout(cloud.timer); cloud.timer=setTimeout(flush,800);
+}
+async function flush(){
+  if(!cloud.ref || cloud.writing || !cloud.dirty) return;
+  cloud.writing=true; cloud.dirty=false;
+  try{ await cloud.ref.set({state:JSON.parse(JSON.stringify(S)),updatedAt:S.updatedAt}); cloud.status="synced"; }
+  catch(e){ cloud.status="error"; }
+  cloud.writing=false;
+  if(cloud.dirty) flush();
+  if(tab==="settings") render();
+}
+function adopt(remote){
+  S=migrate(JSON.parse(JSON.stringify(remote)));
+  saveLocal(); if(rollover()) persist(); render();
+}
+async function initCloud(){
+  const use = window.claude && window.claude.use;
+  if(!use){ return; }
+  try{
+    const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+    const id = user ? await user.id() : null;
+    if(!db || !id){ cloud.status="local"; return; }
+    const ref=db.collection("data/users/"+id).doc("save");
+    const snap=await ref.get();
+    cloud.ref=ref; cloud.status="synced";
+    const remote = snap.exists ? (snap.data()||{}).state : null;
+    if(remote && (!S || (remote.updatedAt||0) > (S.updatedAt||0))) adopt(remote);
+    else if(S){ cloud.dirty=true; flush(); }
+    ref.onSnapshot(sn=>{
+      if(!sn.exists || sn.metadata.hasPendingWrites) return;
+      const r=(sn.data()||{}).state;
+      if(r && (!S || (r.updatedAt||0) > (S.updatedAt||0))) adopt(r);
+    },()=>{ cloud.status="error"; });
+  }catch(e){ cloud.status="error"; }
+}
+
+/* ---------- sound + notices ---------- */
+let actx=null;
+function chime(kind){
+  if(!S || !S.sound) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const notes = kind==="red"?[220,165]:kind==="gold"?[523,659,784,1047]:[660,880];
+    notes.forEach((f,i)=>{
+      const o=actx.createOscillator(), g=actx.createGain();
+      o.type=kind==="red"?"sawtooth":"triangle"; o.frequency.value=f;
+      const t=actx.currentTime+i*0.09;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.12,t+0.02); g.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t+0.4);
+    });
+  }catch(e){}
+}
+const nq=[]; let nBusy=false;
+function notice(t,m,s="",kind=""){ nq.push([t,m,s,kind]); if(!nBusy) nextNotice(); }
+function nextNotice(){
+  const n=nq.shift(); if(!n){ nBusy=false; return; }
+  nBusy=true; const [t,m,s,kind]=n;
+  const el=document.createElement("div");
+  el.className="win notice "+kind;
+  el.innerHTML='<div class="t">[ '+esc(t)+' ]</div><div class="m">'+esc(m)+'</div>'+(s?'<div class="s">'+esc(s)+'</div>':"");
+  let gone=false;
+  const kill=()=>{ if(gone) return; gone=true; el.classList.add("out"); setTimeout(()=>{ el.remove(); nextNotice(); },280); };
+  el.onclick=kill;
+  $("#notices").appendChild(el);
+  chime(kind);
+  setTimeout(kill,kind==="red"?5000:2400);
+}
+
+/* ---------- game logic ---------- */
+function gainXp(xp,why){
+  if(S.penalty) xp=Math.floor(xp/2);
+  S.xp+=xp; S.totalXp+=xp;
+  levelUp();
+  return xp;
+}
+function levelUp(){
+  const cap=levelCap(S);
+  let ups=0;
+  while(S.level<cap && S.xp>=xpNeed(S.level)){ S.xp-=xpNeed(S.level); S.level++; S.freePts+=3; ups++; }
+  if(ups) setTimeout(()=>notice("LEVEL UP","Level "+S.level,"+"+(ups*3)+" stat points to assign","gold"),250);
+  if(S.level>=cap && cap!==Infinity && ups) setTimeout(()=>notice("SYSTEM","Rank Trial available","You've hit the "+RANKS[S.rankIdx].r+"-Rank limit. Clear the trial to keep leveling."),1200);
+}
+function award(id){
+  if(S.titles.includes(id)) return;
+  S.titles.push(id);
+  const t=TITLES.find(x=>x.id===id);
+  if(!S.title) S.title=id;
+  setTimeout(()=>notice("TITLE ACQUIRED",t.name,t.desc,"gold"),900);
+}
+function checkTitles(){
+  const st=streak();
+  if(st>=3) award("persist"); if(st>=7) award("iron"); if(st>=30) award("unbroken");
+  if((S.totals.pushups||0)>=1000) award("century");
+  if((S.totals.run||0)>=42) award("marathon");
+  if(S.gatesCleared>=1) award("gate1"); if(S.gatesCleared>=10) award("gate10");
+  if(S.stats.int>=30) award("scholar");
+  if(S.bossKills>=1) award("slayer"); if(S.bossKills>=10) award("warlord");
+  if(S.body.length>=10) award("mirror");
+}
+function logEx(id,delta){
+  const d=day(); const cur=d.c[id]||0;
+  const next=Math.max(0,Math.round((cur+delta)*100)/100);
+  const real=next-cur;
+  d.c[id]=next; S.totals[id]=Math.max(0,(S.totals[id]||0)+real);
+  if(!d.done && exList().every(e=>(d.c[e]||0)>=d.t[e])){
+    d.done=true;
+    const xp=gainXp(80+S.level*6);
+    const gained=[...new Set(exList().map(e=>EX[e].stat))];
+    if(S.job) gained.push(JOBS[S.job].stat);
+    gained.forEach(s=>S.stats[s]++);
+    const h=new Date().getHours();
+    award("awakened"); if(h<8) award("early"); if(h>=22) award("owl");
+    notice("QUEST CLEARED","Daily Quest complete","+"+xp+" XP · "+gained.map(s=>"+1 "+s.toUpperCase()).join(" · "));
+  }
+  checkTitles(); persist(); render();
+}
+function logPenalty(id,delta){
+  const p=S.penalty; if(!p) return;
+  p.c[id]=Math.max(0,(p.c[id]||0)+delta);
+  if(Object.keys(p.t).every(k=>p.c[k]>=p.t[k])){
+    S.penalty=null; award("survivor");
+    notice("PENALTY CLEARED","You survived","XP gains restored.","gold");
+  }
+  persist(); render();
+}
+function toggleSide(id){
+  const d=day(); const q=S.side.find(x=>x.id===id); if(!q) return;
+  if(d.side[id]){
+    const g=d.side[id]; S.xp=Math.max(0,S.xp-g.xp); S.totalXp=Math.max(0,S.totalXp-g.xp);
+    S.stats[q.stat]=Math.max(1,S.stats[q.stat]-(g.st||1)); delete d.side[id];
+  } else {
+    const x=(S.job&&JOBS[S.job].sideX)||1;
+    const xp=gainXp(25*x); S.stats[q.stat]+=x; d.side[id]={xp,st:x};
+    notice("SIDE QUEST","Cleared: "+q.name,"+"+xp+" XP · +"+x+" "+q.stat.toUpperCase());
+  }
+  checkTitles(); persist(); render();
+}
+function clearGate(id){
+  const g=GATES.find(x=>x.id===id); const d=day();
+  if(d.gates[id] || S.rankIdx<g.rank) return;
+  const xp=gainXp(g.xp); S.stats[g.stat]+=2; d.gates[id]=xp; S.gatesCleared++;
+  notice("GATE CLEARED",g.name,"+"+xp+" XP · +2 "+g.stat.toUpperCase(),"gold");
+  checkTitles(); persist(); render();
+}
+function passTrial(){
+  if(S.level<levelCap(S) || S.rankIdx>=RANKS.length-1) return;
+  S.rankIdx++; S.freePts+=5;
+  const r=RANKS[S.rankIdx].r;
+  award("rank"+r);
+  notice("RANK UP","You are now "+r+"-Rank","+5 stat points · level limit lifted","gold");
+  levelUp(); persist(); render();
+}
+function logBoss(id,delta){
+  const b=ensureBoss(); if(!isWeekend() || b.defeated) return;
+  const cur=b.c[id]||0, next=Math.max(0,Math.round((cur+delta)*100)/100);
+  b.c[id]=next; S.totals[id]=Math.max(0,(S.totals[id]||0)+(next-cur));
+  if(Object.keys(b.t).every(k=>(b.c[k]||0)>=b.t[k])){
+    b.defeated=true; S.bossKills++; S.freePts+=3;
+    const xp=gainXp(400+S.level*10);
+    notice("BOSS DEFEATED",BOSSES.find(x=>x.id===b.id).name+" has fallen","+"+xp+" XP · +3 stat points","gold");
+  }
+  checkTitles(); persist(); render();
+}
+let jobPick=null;
+function setJob(id){
+  if(!JOBS[id] || S.level<JOB_LEVEL) return;
+  const first=!S.job;
+  S.job=id; jobPick=null;
+  if(first){ S.freePts+=5; award("reborn"); }
+  day();
+  notice("JOB CHANGE","You are now a "+JOBS[id].name,first?"+5 stat points · new exercises added to your Daily Quest":"Daily Quest updated","gold");
+  persist(); render();
+}
+function bodyAdd(e){
+  const g=id=>{ const v=parseFloat($(id).value); return isFinite(v)&&v>0?v:null; };
+  const imp=S.units==="imperial";
+  const kg=v=>v==null?null:imp?v/2.20462:v, cm=v=>v==null?null:imp?v*2.54:v;
+  const entry={d:$("#b-date").value||dk(),w:kg(g("#b-w")),waist:cm(g("#b-waist")),chest:cm(g("#b-chest")),arm:cm(g("#b-arm")),bf:g("#b-bf"),lvl:S.level};
+  if(["w","waist","chest","arm","bf"].every(k=>entry[k]==null)){ notice("SYSTEM","Enter at least one measurement"); return; }
+  S.body=S.body.filter(x=>x.d!==entry.d); S.body.push(entry); S.body.sort((a,b)=>a.d<b.d?-1:1);
+  notice("SYSTEM","Check-in saved",entry.d);
+  checkTitles(); persist(); render();
+}
+function useRest(){
+  const today=dk(), w=weekKey(today), d=day();
+  if(S.rest[w] || d.done) return;
+  S.rest[w]=today; d.rest=true;
+  notice("SYSTEM","Rest day recorded","Your streak is safe. Recover well.");
+  persist(); render();
+}
+
+/* ---------- AI (coach + gate generator) ---------- */
+let sampleFn=null, sampleReady=false;
+const ai={coachBusy:false,coachErr:"",gateBusy:false,gateErr:""};
+function sErr(e){
+  const c=e&&e.code;
+  if(c==="not_granted") return "Claude access is turned off for this page. Turn it on from the page's Permissions menu.";
+  if(c==="rate_limited") return "Too many requests right now. Try again in a few minutes.";
+  if(c==="invalid_json") return "The answer came back garbled. Try again.";
+  return "Couldn't reach the System. Check your connection and try again.";
+}
+function coachData(){
+  const today=dk(), days=[];
+  for(let i=20;i>=0;i--){ const k=addDays(today,-i), d=S.days[k]; days.push({date:k,cleared:!!(d&&d.done),rest:!!(d&&d.rest),logged:d?d.c:{},targets:d?d.t:{}}); }
+  return {hunter:{level:S.level,rank:RANKS[S.rankIdx].r,difficulty:S.diff,job:S.job,streak:streak(),penaltyActive:!!S.penalty,stats:S.stats,targetsAutoScaleWithLevel:S.autoScale},
+    exercises:exList().map(id=>({id,name:EX[id].name,unit:EX[id].unit,baseTarget:baseOf(id),todayTarget:target(id)})),
+    last21Days:days,bodyCheckins:S.body.slice(-6),gatesCleared:S.gatesCleared,bossKills:S.bossKills};
+}
+async function runCoach(){
+  if(!sampleFn || ai.coachBusy) return;
+  ai.coachBusy=true; ai.coachErr=""; render();
+  const ids=exList();
+  const prompt=`You are the coach inside a personal gamified fitness tracker that talks like a game "System". Be brief and direct, second person, a little system-voice flavor, but practical.
+Analyze the training data below. Then propose new BASE targets for the daily exercises: raise ones the person clears easily and consistently, lower ones they keep missing, keep the rest. Change any target by at most 25%. Base targets get scaled up with level automatically, so propose the base value.
+Return only JSON: {"headline": string (max 8 words), "analysis": string (2-4 sentences, cite specific numbers from the data), "targets": {exerciseId: number}, "tip": string (one concrete tip for next week)}.
+Use only these exercise ids: ${ids.join(", ")}.
+
+DATA:
+${JSON.stringify(coachData())}`;
+  try{
+    const r=await sampleFn.json(prompt,{modelTier:"default",cache:false});
+    const out={at:Date.now(),headline:String(r.headline||"Analysis complete").slice(0,80),analysis:String(r.analysis||"").slice(0,800),tip:String(r.tip||"").slice(0,300),targets:{},applied:false};
+    const tg=r.targets||{};
+    ids.forEach(id=>{
+      const v=parseFloat(tg[id]); if(!isFinite(v)) return;
+      const b=baseOf(id), rr=EX[id].round;
+      const c=Math.min(b*1.25,Math.max(b*0.75,v));
+      const fin=Math.max(rr,Math.round(c/rr)*rr);
+      if(fin!==b) out.targets[id]=fin;
+    });
+    S.coach=out; persist();
+  }catch(e){ ai.coachErr=sErr(e); }
+  ai.coachBusy=false; render();
+}
+async function runGate(){
+  if(!sampleFn || ai.gateBusy) return;
+  const focus=(($("#gate-focus")||{}).value||"").trim().slice(0,80);
+  ai.gateBusy=true; ai.gateErr=""; render();
+  const prompt=`Design one bodyweight workout called a "Gate" (a bonus challenge) for a gamified fitness tracker.
+Person: rank ${RANKS[S.rankIdx].r} (E is beginner, S is elite), difficulty "${S.diff}", level ${S.level}, job ${S.job||"none"}.
+Their daily exercises and today's targets: ${exList().map(id=>EX[id].name+" "+target(id)+" "+EX[id].unit).join(", ")}.
+${focus?"They asked for this focus: "+JSON.stringify(focus)+".":""}
+Make it take 15-40 minutes, need no equipment beyond a pull-up bar, and be harder than their daily quest but doable. Give it a short, original dungeon-style name (2-3 words, not taken from any existing story or game).
+Return only JSON: {"name": string, "list": [2 to 5 short instruction strings with exact reps, rounds or times], "stat": one of "str","agi","vit","sen","int"}.`;
+  try{
+    const r=await sampleFn.json(prompt,{modelTier:"default",cache:false});
+    const list=(Array.isArray(r.list)?r.list:[]).map(x=>String(x).slice(0,140)).filter(Boolean).slice(0,5);
+    if(!list.length) throw {code:"invalid_json"};
+    S.aiGate={day:dk(),name:String(r.name||"Unnamed Gate").slice(0,40),list,stat:STATS[r.stat]?r.stat:"vit",xp:[150,250,380,520,680,950][S.rankIdx],cleared:false};
+    persist();
+  }catch(e){ ai.gateErr=sErr(e); }
+  ai.gateBusy=false; render();
+}
+function clearAiGate(){
+  const g=S.aiGate; if(!g || g.day!==dk() || g.cleared) return;
+  g.cleared=true; const xp=gainXp(g.xp); S.stats[g.stat]+=2; S.gatesCleared++;
+  notice("GATE CLEARED",g.name,"+"+xp+" XP · +2 "+g.stat.toUpperCase(),"gold");
+  checkTitles(); persist(); render();
+}
+
+/* ---------- rest timer ---------- */
+const rt={open:false,end:0,dur:90};
+function restBuild(){
+  const el=$("#restsheet"); el.hidden=!rt.open; if(!rt.open){ el.innerHTML=""; return; }
+  el.innerHTML=`<div class="win"><div class="head" style="margin-bottom:4px"><span class="tag">Rest</span><button class="x" data-act="rtclose" aria-label="Close rest timer">×</button></div>
+    <div class="rt-time" id="rt-time">00:00</div><div class="bar" id="rt-bar"><i style="width:0"></i></div>
+    <div class="rt-presets">${[30,60,90,120,180].map(s=>`<button class="btn sm ${rt.dur===s&&rt.end?"primary":""}" data-act="rtgo" data-n="${s}">${({30:"30s",60:"1m",90:"1:30",120:"2m",180:"3m"})[s]}</button>`).join("")}</div>
+    <div class="row" style="margin-top:8px"><button class="btn sm grow" data-act="rtadd" ${rt.end?"":"disabled"}>+15 s</button><button class="btn sm grow" data-act="rtstop" ${rt.end?"":"disabled"}>Stop</button></div></div>`;
+  restTick();
+}
+function restTick(){
+  if(!rt.open) return;
+  const left=rt.end?Math.max(0,(rt.end-Date.now())/1000):0;
+  const t=$("#rt-time"), b=$("#rt-bar>i"); if(!t) return;
+  const s=Math.ceil(left); t.textContent=pad(Math.floor(s/60))+":"+pad(s%60);
+  b.style.width=(rt.end?(left/rt.dur*100):0).toFixed(1)+"%";
+  if(rt.end && left<=0){
+    rt.end=0; restBuild();
+    try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){}
+    notice("REST OVER","Next set","Get back to it.","gold");
+  }
+}
+setInterval(restTick,250);
+
+/* ---------- rendering ---------- */
+function timeLeft(){
+  const n=new Date(), m=new Date(n); m.setHours(24,0,0,0);
+  const s=Math.max(0,Math.floor((m-n)/1000));
+  return pad(Math.floor(s/3600))+":"+pad(Math.floor(s%3600/60))+":"+pad(s%60);
+}
+function bar(v,max,cls=""){ const p=Math.max(0,Math.min(100,max?v/max*100:0)); return '<div class="bar '+cls+'"><i style="width:'+p.toFixed(1)+'%"></i></div>'; }
+function rankBadge(i){ const r=RANKS[i]; return '<span class="rank" style="color:'+r.color+'">'+r.r+'</span>'; }
+
+function vStatus(){
+  const t=S.title?TITLES.find(x=>x.id===S.title):null;
+  const cap=levelCap(S), capped=S.level>=cap;
+  const hpMax=100+S.stats.vit*10, mpMax=50+S.stats.int*8;
+  const power=Object.values(S.stats).reduce((a,b)=>a+b,0);
+  return `
+  <section class="win">
+    <div class="head"><span class="tag">Status</span><span class="muted mono" style="font-size:12px">Power ${power}</span></div>
+    <div class="hero">
+      <div class="lvl"><small>LEVEL</small><b class="mono">${S.level}</b></div>
+      <dl class="kv">
+        <dt>Name</dt><dd><b>${esc(S.name)}</b></dd>
+        <dt>Rank</dt><dd>${rankBadge(S.rankIdx)}</dd>
+        <dt>Job</dt><dd>${S.job?esc(JOBS[S.job].name):'<span class="muted">None · unlocks at Lv '+JOB_LEVEL+'</span>'}</dd>
+        <dt>Title</dt><dd>${t?esc(t.name):'<span class="muted">None</span>'}</dd>
+        <dt>Streak</dt><dd class="mono">${streak()} ${streak()===1?"day":"days"}</dd>
+      </dl>
+    </div>
+    <div style="display:grid;gap:8px;margin-top:16px">
+      <div class="row muted" style="font-size:12px;justify-content:space-between"><span>HP</span><span class="mono">${hpMax} / ${hpMax}</span></div>${bar(1,1,"hp")}
+      <div class="row muted" style="font-size:12px;justify-content:space-between"><span>MP</span><span class="mono">${mpMax} / ${mpMax}</span></div>${bar(1,1,"mp")}
+      <div class="row muted" style="font-size:12px;justify-content:space-between"><span>EXP</span><span class="mono">${capped?"LIMIT · "+S.xp+" banked":S.xp+" / "+xpNeed(S.level)}</span></div>${bar(capped?1:S.xp,capped?1:xpNeed(S.level),capped?"gold":"")}
+    </div>
+  </section>
+  <section class="win${S.freePts?" gold":""}">
+    <div class="head"><span class="tag">Stats</span>${S.freePts?`<span class="mono" style="color:var(--gold);font-size:13px">${S.freePts} points available</span>`:""}</div>
+    <div class="stats">
+      ${Object.keys(STATS).map(k=>`<div class="stat"><b>${k.toUpperCase()}</b><span class="v">${S.stats[k]}</span>${S.freePts?`<button class="plus" data-act="alloc" data-k="${k}" aria-label="Add a point to ${STATS[k]}">+</button>`:""}</div>`).join("")}
+    </div>
+    <p class="muted" style="font-size:12.5px;margin:12px 0 0">Daily Quests raise the stat each exercise trains. Side Quests raise their tagged stat. Gates give +2. Level-ups give 3 free points.</p>
+  </section>
+  <section class="win">
+    <div class="head"><span class="tag">Titles</span><span class="muted" style="font-size:12px">${S.titles.length} / ${TITLES.length} · tap to equip</span></div>
+    <div class="chips">
+      ${TITLES.map(x=>{const has=S.titles.includes(x.id);return `<button class="chip ${S.title===x.id?"on":""} ${has?"":"locked"}" ${has?`data-act="title" data-k="${x.id}"`:"disabled"} title="${esc(x.desc)}">${esc(has?x.name:"??? · "+x.desc)}</button>`}).join("")}
+    </div>
+  </section>`;
+}
+
+function vQuests(){
+  const d=day(), today=dk(), w=weekKey(today);
+  const xpReward=80+S.level*6;
+  const stats=[...new Set(exList().map(e=>EX[e].stat).concat(S.job?[JOBS[S.job].stat]:[]))];
+  const cap=levelCap(S);
+  let html="";
+  if(S.penalty){
+    const p=S.penalty;
+    html+=`<section class="win red">
+      <div class="head"><span class="tag">Penalty Quest</span><span class="muted" style="font-size:12px">XP halved until cleared</span></div>
+      <div class="title" style="color:var(--red)">Survive</div>
+      ${Object.keys(p.t).map(id=>{const e=EX[id],c=p.c[id]||0,t=p.t[id];return `<div class="ex ${c>=t?"done":""}">
+        <div class="top"><span class="name">${e.name}</span><span class="cnt">${fmt(c,e.unit)} / ${fmt(t,e.unit)} ${e.unit}</span></div>${bar(c,t,"hp")}
+        <div class="steps">${e.steps.map(s=>`<button class="btn sm red" data-act="pen" data-k="${id}" data-n="${s}">+${s}</button>`).join("")}</div></div>`}).join("")}
+    </section>`;
+  }
+  if(S.level>=cap && cap!==Infinity){
+    const nx=RANKS[S.rankIdx+1];
+    html+=`<section class="win gold">
+      <div class="head"><span class="tag">Rank Trial</span>${rankBadge(S.rankIdx+1)}</div>
+      <div class="title">${nx.r}-Rank Trial</div>
+      <p style="margin:6px 0 10px">In one session, complete double today's Daily Quest targets:</p>
+      <ul style="margin:0 0 12px;padding-left:18px">${exList().map(id=>`<li>${fmt(d.t[id]*2,EX[id].unit)} ${EX[id].unit} ${EX[id].name.toLowerCase()}</li>`).join("")}</ul>
+      <button class="btn gold" data-act="trial">I cleared the trial</button>
+    </section>`;
+  }
+  if(S.level>=JOB_LEVEL && !S.job){
+    html+=`<section class="win gold">
+      <div class="head"><span class="tag">Job Change Quest</span><span class="muted" style="font-size:12px">Level ${JOB_LEVEL} reached</span></div>
+      <div class="title">Choose your path</div>
+      <div class="stack" style="margin-top:10px">${Object.keys(JOBS).map(k=>`<button class="opt ${jobPick===k?"on":""}" data-act="jobpick" data-k="${k}"><b>${JOBS[k].name} · +${JOBS[k].stat.toUpperCase()}</b><span>${JOBS[k].desc}</span></button>`).join("")}</div>
+      ${jobPick?`<p style="margin:14px 0 6px">Trial for ${JOBS[jobPick].name}:</p><ul style="margin:0 0 12px;padding-left:18px">${JOBS[jobPick].trial.map(x=>`<li>${x}</li>`).join("")}</ul>
+      <button class="btn gold" data-act="jobset" data-k="${jobPick}">I cleared the Job Change trial</button>`:""}
+    </section>`;
+  }
+  const up=diffSuggestion();
+  if(up){
+    const hasCustom=Object.keys(S.custom||{}).length>0;
+    html+=`<section class="win gold">
+      <div class="head"><span class="tag">System Assessment</span><span class="muted" style="font-size:12px">14 days cleared in a row</span></div>
+      <div class="title">You've outgrown ${DIFF[S.diff].name}</div>
+      <p style="margin:6px 0 4px">Move up to <b>${DIFF[up].name}</b>? Base targets become ${["pushups","situps","squats"].map(e=>DIFF[up].base[e]).join(" / ")} reps and ${DIFF[up].base.run} km, still scaled by your level. Takes effect with tomorrow's Daily Quest.</p>
+      ${hasCustom?'<p class="muted" style="margin:0 0 4px;font-size:12.5px">Your custom targets will be cleared.</p>':""}
+      <div class="row" style="margin-top:10px"><button class="btn gold" data-act="diffup" data-k="${up}">Move up to ${DIFF[up].name}</button><button class="btn sm" data-act="diffsnooze">Not yet</button></div>
+    </section>`;
+  }
+  if(isWeekend()) html+=bossCard();
+  html+=`<section class="win">
+    <div class="head"><span class="tag">Daily Quest</span>${d.done?'<span class="stamp">CLEARED</span>':d.rest?'<span class="stamp" style="color:var(--muted);border-color:var(--muted)">REST</span>':`<span class="timer" id="timer">${timeLeft()}</span>`}</div>
+    <div class="title">Train to become strong</div>
+    ${exList().map(id=>{const e=EX[id],c=d.c[id]||0,t=d.t[id];return `<div class="ex ${c>=t?"done":""}">
+      <div class="top"><span class="name">${e.name}${jobAdds().includes(id)&&!S.exercises.includes(id)?' <span class="stag">JOB</span>':''}</span><span class="cnt">${fmt(c,e.unit)} / ${fmt(t,e.unit)} ${e.unit==="reps"?"":e.unit}</span></div>
+      ${bar(c,t)}
+      <div class="steps"><button class="btn sm" data-act="ex" data-k="${id}" data-n="${-e.steps[0]}" aria-label="Undo">−${e.steps[0]}</button>${e.steps.map(s=>`<button class="btn sm" data-act="ex" data-k="${id}" data-n="${s}">+${s}</button>`).join("")}</div>
+    </div>`}).join("")}
+    <div class="reward">Reward: <b>+${S.penalty?Math.floor(xpReward/2):xpReward} XP</b> · ${stats.map(s=>"+1 "+s.toUpperCase()).join(" · ")}</div>
+    <div class="row" style="margin-top:10px"><button class="btn sm" data-act="resttimer">Rest timer</button></div>
+    ${d.done||d.rest?"":`<div class="warn">Not clearing this by midnight will issue a Penalty Quest.</div>`}
+    ${d.done||d.rest?"":`<div class="row" style="margin-top:12px;justify-content:space-between"><span class="muted" style="font-size:12.5px">${S.rest[w]?"Rest day used this week ("+S.rest[w].slice(5)+")":"1 rest day per week keeps your streak"}</span><button class="btn sm" data-act="rest" ${S.rest[w]?"disabled":""}>Take rest day</button></div>`}
+  </section>
+  <section class="win">
+    <div class="head"><span class="tag">Side Quests</span><span class="muted" style="font-size:12px">+${25*((S.job&&JOBS[S.job].sideX)||1)} XP each · daily</span></div>
+    <div>${S.side.length?S.side.map(q=>`<div class="check">
+      <button class="box ${d.side[q.id]?"on":""}" data-act="side" data-k="${q.id}" aria-label="Toggle ${esc(q.name)}">${d.side[q.id]?"✓":""}</button>
+      <span class="sname">${esc(q.name)}</span><span class="stag">${q.stat.toUpperCase()}</span>
+      <button class="x" data-act="delside" data-k="${q.id}" aria-label="Remove ${esc(q.name)}">×</button></div>`).join(""):'<p class="muted">No side quests. Add habits you want to keep: sleep, water, reading, meditation.</p>'}</div>
+    <form id="addside" class="row" style="margin-top:12px">
+      <input id="sq-name" class="grow" maxlength="60" placeholder="New side quest, e.g. Sleep by 11 pm" style="flex:1 1 180px">
+      <select id="sq-stat" style="width:auto">${Object.keys(STATS).map(k=>`<option value="${k}">${k.toUpperCase()}</option>`).join("")}</select>
+      <button class="btn sm" type="submit">Add</button>
+    </form>
+  </section>`;
+  return html;
+}
+
+function bossCard(){
+  const b=ensureBoss(), info=BOSSES.find(x=>x.id===b.id), live=isWeekend();
+  const ks=Object.keys(b.t);
+  const dmg=ks.reduce((a,k)=>a+Math.min(1,(b.c[k]||0)/b.t[k]),0)/ks.length;
+  const hp=Math.ceil((1-dmg)*1000)/10;
+  return `<section class="win red">
+    <div class="head"><span class="tag">Weekly Boss</span>${b.defeated?'<span class="stamp">DEFEATED</span>':`<span class="muted" style="font-size:12px">${live?"Ends Sunday midnight":"Appears Saturday"}</span>`}</div>
+    <div class="boss-name">${esc(info.name)}</div>
+    <p class="muted" style="margin:4px 0 10px;font-size:13px">${esc(info.lore)}</p>
+    <div class="row muted" style="font-size:12px;justify-content:space-between"><span>BOSS HP</span><span class="mono">${hp}%</span></div>${bar(hp,100,"hp")}
+    ${ks.map(id=>{const e=EX[id],c=b.c[id]||0,t=b.t[id];return `<div class="ex ${c>=t?"done":""}">
+      <div class="top"><span class="name">${e.name}</span><span class="cnt">${fmt(c,e.unit)} / ${fmt(t,e.unit)} ${e.unit==="reps"?"":e.unit}</span></div>
+      ${live&&!b.defeated?`<div class="steps"><button class="btn sm red" data-act="boss" data-k="${id}" data-n="${-e.steps[0]}" aria-label="Undo">−${e.steps[0]}</button>${e.steps.map(s=>`<button class="btn sm red" data-act="boss" data-k="${id}" data-n="${s}">+${s}</button>`).join("")}</div>`:""}
+    </div>`}).join("")}
+    <div class="reward">Reward: <b>+${(S.penalty?0.5:1)*(400+S.level*10)|0} XP</b> · +3 stat points · counts toward lifetime totals</div>
+    ${live&&!b.defeated?'<div class="row" style="margin-top:10px"><button class="btn sm" data-act="resttimer">Rest timer</button></div>':""}
+  </section>`;
+}
+function aiGateCard(){
+  const g=S.aiGate&&S.aiGate.day===dk()?S.aiGate:null;
+  let inner;
+  if(!sampleFn) inner=`<p class="muted" style="margin:0;font-size:13px">${sampleReady?"Gate generation needs Claude access, which isn't available in this view.":"Connecting…"}</p>`;
+  else if(g) inner=`<div class="gate"><div class="gt"><div class="row">${rankBadge(S.rankIdx)}<h3>${esc(g.name)}</h3></div><span class="mono" style="color:var(--gold);font-size:13px">${g.xp} XP</span></div>
+      <ul>${g.list.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+      <div class="row" style="justify-content:space-between"><span class="stag">+2 ${g.stat.toUpperCase()}</span>${g.cleared?'<span class="stamp">CLEARED</span>':'<button class="btn sm primary" data-act="aigate">Mark cleared</button>'}</div></div>`;
+  else inner=`<p class="muted" style="margin:0 0 10px;font-size:13px">Have the System design a one-off Gate built around your rank and exercises. It expires at midnight.</p>
+      <div class="row"><input id="gate-focus" class="grow" maxlength="80" placeholder="Focus (optional): legs, 20 minutes, no running" style="flex:1 1 200px"><button class="btn sm primary" data-act="gengate" ${ai.gateBusy?"disabled":""}>${ai.gateBusy?"Opening…":"Open a Gate"}</button></div>`;
+  return `<section class="win gold"><div class="head"><span class="tag">System Gate</span><span class="muted" style="font-size:12px">AI-generated · daily</span></div>${inner}${ai.gateErr?`<p class="err">${esc(ai.gateErr)}</p>`:""}</section>`;
+}
+function vGates(){
+  const d=day();
+  return bossCard()+aiGateCard()+`<section class="win">
+    <div class="head"><span class="tag">Gates</span><button class="btn sm" data-act="resttimer">Rest timer</button></div>
+    <p class="muted" style="margin:0 0 14px;font-size:13px">Harder workouts that open as your rank climbs. Clear one, tap it, take the loot.</p>
+    ${GATES.map(g=>{const lock=S.rankIdx<g.rank, done=d.gates[g.id]!==undefined;return `<div class="gate ${lock?"locked":""}">
+      <div class="gt"><div class="row">${rankBadge(g.rank)}<h3>${esc(g.name)}</h3></div><span class="mono" style="color:var(--gold);font-size:13px">${g.xp} XP</span></div>
+      <ul>${g.list.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+      <div class="row" style="justify-content:space-between"><span class="stag">+2 ${g.stat.toUpperCase()}</span>
+      ${lock?`<span class="muted" style="font-size:12px">Requires ${RANKS[g.rank].r}-Rank</span>`:done?'<span class="stamp">CLEARED</span>':`<button class="btn sm primary" data-act="gate" data-k="${g.id}">Mark cleared</button>`}</div>
+    </div>`}).join("")}
+  </section>`;
+}
+
+function coachCard(){
+  const c=S.coach;
+  let inner="";
+  if(!sampleFn) inner=`<p class="muted" style="margin:0;font-size:13px">${sampleReady?"The coach needs Claude access, which isn't available in this view.":"Connecting…"}</p>`;
+  else {
+    if(c){
+      const ch=Object.keys(c.targets||{});
+      inner+=`<div class="coach-out"><h3>${esc(c.headline)}</h3><p>${esc(c.analysis)}</p>${c.tip?`<p><span class="stag">TIP</span> ${esc(c.tip)}</p>`:""}
+        ${ch.length?`<table class="mt"><thead><tr><th>Exercise</th><th>Now</th><th>Proposed</th></tr></thead><tbody>${ch.map(id=>`<tr><td>${EX[id].name}</td><td>${fmt(baseOf(id),EX[id].unit)}</td><td>${fmt(c.targets[id],EX[id].unit)}</td></tr>`).join("")}</tbody></table>
+        <div class="row">${c.applied?'<span class="stamp">APPLIED</span><span class="muted" style="font-size:12px">New targets start tomorrow</span>':'<button class="btn sm gold" data-act="coachapply">Apply new targets</button>'}</div>`:'<p class="muted" style="font-size:13px">No target changes suggested.</p>'}
+        <p class="muted" style="font-size:12px">Analyzed ${new Date(c.at).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}</p></div>`;
+    } else inner+=`<p class="muted" style="margin:0;font-size:13px">The System reads your last 3 weeks and body check-ins, then tunes your Daily Quest targets.</p>`;
+    inner+=`<div class="row" style="margin-top:12px"><button class="btn sm primary" data-act="coach" ${ai.coachBusy?"disabled":""}>${ai.coachBusy?"Analyzing…":c?"Analyze again":"Run analysis"}</button></div>`;
+  }
+  return `<section class="win"><div class="head"><span class="tag">System Analysis</span><span class="muted" style="font-size:12px">AI coach</span></div>${inner}${ai.coachErr?`<p class="err">${esc(ai.coachErr)}</p>`:""}</section>`;
+}
+function vLog(){
+  const today=dk(); const start=addDays(weekKey(today),-14*7);
+  // 15 columns = weeks; render row-major by weekday
+  let cells="";
+  for(let wd=0;wd<7;wd++){
+    for(let wk=0;wk<15;wk++){
+      const k=addDays(start,wk*7+wd); const d=S.days[k];
+      let c="";
+      if(k>today) c="style=\"visibility:hidden\"";
+      else{
+        let cls=d&&d.done?"d":d&&d.rest?"r":d&&Object.values(d.c||{}).some(v=>v>0)?"p":(k>=S.created&&k<today)?"m":"";
+        if(k===today) cls+=" t";
+        c=`class="${cls}" title="${k}"`;
+      }
+      cells+=`<i ${c}></i>`;
+    }
+  }
+  const tot=S.totals;
+  const daysDone=Object.values(S.days).filter(d=>d.done).length;
+  const recent=Object.keys(S.days).sort().reverse().slice(0,10);
+  return coachCard()+`<section class="win">
+    <div class="head"><span class="tag">Record</span><span class="muted" style="font-size:12px">Last 15 weeks · Mon to Sun top to bottom</span></div>
+    <div class="heat">${cells}</div>
+    <div class="legend"><span><i style="background:var(--glow)"></i>Cleared</span><span><i style="background:rgba(124,196,255,.35)"></i>Partial</span><span><i style="background:#3a4f7a"></i>Rest</span><span><i style="background:rgba(255,84,104,.35)"></i>Missed</span></div>
+  </section>
+  <section class="win">
+    <div class="head"><span class="tag">Lifetime</span></div>
+    <div class="totals">
+      <div><b>${daysDone}</b><span>Quests cleared</span></div>
+      <div><b>${S.totalXp.toLocaleString()}</b><span>Total XP</span></div>
+      <div><b>${S.gatesCleared}</b><span>Gates</span></div>
+      ${Object.keys(EX).filter(id=>tot[id]).map(id=>`<div><b>${fmt(tot[id],EX[id].unit)}</b><span>${EX[id].name}${EX[id].unit==="km"?" km":EX[id].unit==="sec"?" sec":""}</span></div>`).join("")}
+    </div>
+  </section>
+  <section class="win">
+    <div class="head"><span class="tag">Recent days</span></div>
+    ${recent.map(k=>{const d=S.days[k];const parts=Object.keys(d.c||{}).filter(id=>d.c[id]>0).map(id=>fmt(d.c[id],EX[id].unit)+" "+EX[id].name.toLowerCase());
+      return `<div class="check"><span class="mono muted" style="width:92px;flex:none">${k}</span><span class="sname" style="font-size:13px">${parts.join(", ")||'<span class="muted">Nothing logged</span>'}</span>${d.done?'<span class="stag" style="color:var(--green);border-color:var(--green)">CLEAR</span>':d.rest?'<span class="stag">REST</span>':""}</div>`}).join("")}
+  </section>`;
+}
+
+const imp = () => S.units==="imperial";
+const showW = kg => kg==null?null:Math.round((imp()?kg*2.20462:kg)*10)/10;
+const showL = c => c==null?null:Math.round((imp()?c/2.54:c)*10)/10;
+const wU = () => imp()?"lb":"kg", lU = () => imp()?"in":"cm";
+let chartPts=[];
+function weightChart(pts){
+  const W=440,H=200,ml=42,mr=14,mt=14,mb=28;
+  const xs=pts.map(p=>fromKey(p.d).getTime()), ys=pts.map(p=>p.v);
+  let lo=Math.min(...ys), hi=Math.max(...ys); if(hi-lo<2){ lo-=1; hi+=1; }
+  const raw=(hi-lo)/3, mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const step=[1,2,2.5,5,10].map(m=>m*mag).find(v=>v>=raw)||raw;
+  lo=Math.floor(lo/step)*step; hi=Math.ceil(hi/step)*step;
+  const x0=Math.min(...xs), x1=Math.max(...xs)||x0+1;
+  const X=t=>ml+(x1===x0?0.5:(t-x0)/(x1-x0))*(W-ml-mr), Y=v=>mt+(1-(v-lo)/(hi-lo))*(H-mt-mb);
+  chartPts=pts.map((p,i)=>({x:X(xs[i]),y:Y(p.v),p}));
+  let grid="";
+  for(let v=lo;v<=hi+1e-9;v+=step){ const y=Y(v).toFixed(1); grid+=`<line x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}" stroke="rgba(129,151,187,.18)" stroke-width="1"/><text x="${ml-8}" y="${y}" fill="#8197bb" font-size="11" text-anchor="end" dominant-baseline="middle" font-family="JetBrains Mono,monospace">${Math.round(v*10)/10}</text>`; }
+  const f=t=>new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  const line=chartPts.map((c,i)=>(i?"L":"M")+c.x.toFixed(1)+" "+c.y.toFixed(1)).join(" ");
+  const area=line+` L${chartPts[chartPts.length-1].x.toFixed(1)} ${H-mb} L${chartPts[0].x.toFixed(1)} ${H-mb} Z`;
+  return `<div class="chart-wrap" id="wchart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight over time">
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc4ff" stop-opacity=".28"/><stop offset="1" stop-color="#7cc4ff" stop-opacity="0"/></linearGradient></defs>
+    ${grid}<path d="${area}" fill="url(#wg)"/><path d="${line}" fill="none" stroke="#7cc4ff" stroke-width="2" stroke-linejoin="round"/>
+    ${chartPts.map((c,i)=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${i===chartPts.length-1?5:4}" fill="#7cc4ff" stroke="#060a13" stroke-width="2"/>`).join("")}
+    <text x="${ml}" y="${H-8}" fill="#8197bb" font-size="11" font-family="JetBrains Mono,monospace">${f(x0)}</text>
+    <text x="${W-mr}" y="${H-8}" fill="#8197bb" font-size="11" text-anchor="end" font-family="JetBrains Mono,monospace">${f(x1)}</text>
+    <line id="wx" x1="0" x2="0" y1="${mt}" y2="${H-mb}" stroke="rgba(220,233,255,.4)" stroke-width="1" visibility="hidden"/>
+    <rect id="whit" x="${ml}" y="0" width="${W-ml-mr}" height="${H}" fill="transparent"/>
+  </svg><div class="tip" id="wtip" hidden></div></div>`;
+}
+function wireChart(){
+  const wrap=$("#wchart"); if(!wrap) return;
+  const svg=wrap.querySelector("svg"), tip=$("#wtip"), vx=$("#wx");
+  const move=ev=>{
+    const r=svg.getBoundingClientRect(), sx=(ev.clientX-r.left)/r.width*440;
+    let best=chartPts[0]; chartPts.forEach(c=>{ if(Math.abs(c.x-sx)<Math.abs(best.x-sx)) best=c; });
+    vx.setAttribute("x1",best.x); vx.setAttribute("x2",best.x); vx.setAttribute("visibility","visible");
+    tip.hidden=false; tip.style.left=Math.min(Math.max(best.x/440*r.width,60),r.width-60)+"px";
+    tip.innerHTML=`<b>${best.p.v} ${wU()}</b>${esc(best.p.d)} · Lv ${best.p.lvl||"?"}`;
+  };
+  svg.addEventListener("pointermove",move); svg.addEventListener("pointerdown",move);
+  svg.addEventListener("pointerleave",()=>{ tip.hidden=true; vx.setAttribute("visibility","hidden"); });
+}
+function vBody(){
+  const B=S.body, last=B[B.length-1];
+  const wpts=B.filter(x=>x.w!=null).map(x=>({d:x.d,v:showW(x.w),lvl:x.lvl}));
+  const rows=[["Weight","w",showW,wU()],["Waist","waist",showL,lU()],["Chest","chest",showL,lU()],["Arms","arm",showL,lU()],["Body fat","bf",v=>v==null?null:Math.round(v*10)/10,"%"]];
+  const firstOf=k=>{ const e=B.find(x=>x[k]!=null); return e?e[k]:null; };
+  const lastOf=k=>{ for(let i=B.length-1;i>=0;i--) if(B[i][k]!=null) return B[i][k]; return null; };
+  const pre=last&&last.d===dk()?last:{};
+  const val=(k,f)=>pre[k]!=null?f(pre[k]):"";
+  let html=`<section class="win">
+    <div class="head"><span class="tag">Body check-in</span>
+      <select id="set-units" style="width:auto;padding:5px 8px;font-size:12px" aria-label="Units"><option value="metric" ${!imp()?"selected":""}>kg · cm</option><option value="imperial" ${imp()?"selected":""}>lb · in</option></select></div>
+    <form id="bodyform" class="stack">
+      <div class="form-grid">
+        <label>Date<input type="date" id="b-date" value="${dk()}" max="${dk()}"></label>
+        <label>Weight (${wU()})<input type="number" step="0.1" min="0" inputmode="decimal" id="b-w" value="${val("w",showW)}"></label>
+        <label>Waist (${lU()})<input type="number" step="0.1" min="0" inputmode="decimal" id="b-waist" value="${val("waist",showL)}"></label>
+        <label>Chest (${lU()})<input type="number" step="0.1" min="0" inputmode="decimal" id="b-chest" value="${val("chest",showL)}"></label>
+        <label>Arms (${lU()})<input type="number" step="0.1" min="0" inputmode="decimal" id="b-arm" value="${val("arm",showL)}"></label>
+        <label>Body fat (%)<input type="number" step="0.1" min="0" max="70" inputmode="decimal" id="b-bf" value="${val("bf",v=>v)}"></label>
+      </div>
+      <button class="btn primary" type="submit">Save check-in</button>
+    </form>
+    <p class="muted" style="font-size:12.5px;margin:10px 0 0">Fill in what you have. One check-in per day; saving again replaces it. Weekly is plenty.</p>
+  </section>`;
+  if(wpts.length){
+    const d=Math.round((wpts[wpts.length-1].v-wpts[0].v)*10)/10;
+    html+=`<section class="win"><div class="head"><span class="tag">Weight</span><span class="muted" style="font-size:12px">${wpts.length} check-in${wpts.length>1?"s":""}</span></div>
+      <div class="row" style="align-items:baseline;gap:12px"><span class="big">${wpts[wpts.length-1].v}</span><span class="muted">${wU()}</span>
+      ${wpts.length>1?`<span class="mono ${d<0?"delta-dn":d>0?"delta-up":"muted"}" style="font-size:14px">${d>0?"+":""}${d} ${wU()} since ${esc(wpts[0].d)}</span>`:""}</div>
+      ${wpts.length>1?weightChart(wpts):'<p class="muted" style="font-size:13px">Log one more check-in to see the trend line.</p>'}</section>`;
+  }
+  if(B.length){
+    html+=`<section class="win"><div class="head"><span class="tag">Measurements</span><span class="muted" style="font-size:12px">First vs latest</span></div>
+      <table class="mt"><thead><tr><th>Measure</th><th>First</th><th>Latest</th><th>Change</th></tr></thead><tbody>
+      ${rows.filter(r=>lastOf(r[1])!=null).map(([n,k,f,u])=>{const a=f(firstOf(k)),b=f(lastOf(k)),c=Math.round((b-a)*10)/10;return `<tr><td>${n}</td><td>${a} ${u}</td><td>${b} ${u}</td><td>${c>0?"+":""}${c}</td></tr>`}).join("")}
+      </tbody></table></section>
+    <section class="win"><div class="head"><span class="tag">Check-ins</span></div>
+      ${B.slice().reverse().slice(0,12).map(x=>`<div class="check"><span class="mono muted" style="width:92px;flex:none">${esc(x.d)}</span><span class="sname" style="font-size:13px">${[x.w!=null?showW(x.w)+" "+wU():null,x.waist!=null?"waist "+showL(x.waist):null,x.chest!=null?"chest "+showL(x.chest):null,x.arm!=null?"arms "+showL(x.arm):null,x.bf!=null?x.bf+"% bf":null].filter(Boolean).join(" · ")}</span><span class="stag">LV ${x.lvl||"?"}</span><button class="x" data-act="delbody" data-k="${esc(x.d)}" aria-label="Delete check-in ${esc(x.d)}">×</button></div>`).join("")}
+    </section>`;
+  } else {
+    html+=`<section class="win"><div class="head"><span class="tag">Progress</span></div><p class="muted" style="margin:0;font-size:13.5px">Your first check-in sets the baseline. After that you'll see a weight trend line, each check-in tagged with your level at the time, and how every measurement has changed.</p></section>`;
+  }
+  return html;
+}
+function vSettings(){
+  const st={synced:"Synced to your Claude account",error:"Cloud save failed. Progress is kept on this device.",local:"Saved on this device only"}[cloud.status];
+  return `<section class="win">
+    <div class="head"><span class="tag">Hunter</span></div>
+    <div class="stack">
+      <label>Name<input id="set-name" maxlength="24" value="${esc(S.name)}"></label>
+      <label>Difficulty<select id="set-diff">${Object.keys(DIFF).map(k=>`<option value="${k}" ${S.diff===k?"selected":""}>${DIFF[k].name}</option>`).join("")}</select></label>
+      <label style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="set-scale" style="width:auto" ${S.autoScale?"checked":""}> Targets grow 2% per level to 2× at Lv 51, then 1% per level to 3× at Lv 151</label>
+      <label style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="set-sound" style="width:auto" ${S.sound?"checked":""}> System sounds</label>
+    </div>
+  </section>
+  <section class="win">
+    <div class="head"><span class="tag">Daily Quest exercises</span><span class="muted" style="font-size:12px">New targets apply tomorrow</span></div>
+    ${Object.keys(EX).map(id=>{const ja=jobAdds().includes(id)&&!S.exercises.includes(id);const on=S.exercises.includes(id)||ja;const base=baseOf(id);return `<div class="check">
+      <button class="box ${on?"on":""}" data-act="toggleex" data-k="${id}" aria-label="Toggle ${EX[id].name}" ${ja?"disabled title=\"Added by your job\"":""}>${on?"✓":""}</button>
+      <span class="sname">${EX[id].name}${ja?' <span class="stag">JOB</span>':''}</span>
+      <input type="number" min="0" step="${EX[id].round}" value="${base}" data-base="${id}" id="base-${id}" style="width:96px" aria-label="${EX[id].name} base target">
+      <span class="muted" style="width:40px;font-size:12px">${EX[id].unit}</span></div>`}).join("")}
+  </section>
+  ${S.job?`<section class="win"><div class="head"><span class="tag">Job</span></div>
+    <label>Current job<select id="set-job">${Object.keys(JOBS).map(k=>`<option value="${k}" ${S.job===k?"selected":""}>${JOBS[k].name} · ${JOBS[k].desc}</option>`).join("")}</select></label></section>`:""}
+  <section class="win">
+    <div class="head"><span class="tag">Save data</span></div>
+    <p style="margin:0 0 12px;font-size:13.5px">${st}</p>
+    <div class="row">
+      <button class="btn sm" data-act="export">Copy backup</button>
+      <button class="btn sm" data-act="showimport">Restore backup</button>
+    </div>
+    <div id="io" hidden style="margin-top:12px" class="stack">
+      <textarea id="io-text" rows="5" placeholder="Paste a backup here"></textarea>
+      <button class="btn sm primary" data-act="import">Restore from text</button>
+    </div>
+  </section>
+  <section class="win red">
+    <div class="head"><span class="tag">Danger zone</span></div>
+    <p style="margin:0 0 12px;font-size:13.5px">Wipe everything and start over at Level 1.</p>
+    <div class="row"><button class="btn sm red" data-act="reset">${resetArm?"Tap again to erase everything":"Reset progress"}</button>${resetArm?'<button class="btn sm" data-act="cancelreset">Cancel</button>':""}</div>
+  </section>`;
+}
+
+function render(){
+  if(!S){ onboarding(); return; }
+  $("#nav").hidden=false;
+  const views={status:vStatus,quests:vQuests,gates:vGates,body:vBody,log:vLog,settings:vSettings};
+  const labels={status:"Status",quests:"Quests",gates:"Gates",body:"Body",log:"Record",settings:"System"};
+  if(!views[tab]) tab="quests";
+  ensureBoss();
+  $("#app").innerHTML=views[tab]();
+  if(tab==="body") wireChart();
+  const bossLive=isWeekend()&&S.boss&&!S.boss.defeated;
+  const d=S.days[dk()];
+  const pending=S.penalty || !(d&&(d.done||d.rest));
+  $("#nav .in").innerHTML=Object.keys(views).map(k=>`<button class="${tab===k?"on":""}" data-tab="${k}" aria-label="${k}">${ICONS[k]}<span>${labels[k]}</span>${k==="quests"&&pending?'<span class="dot"></span>':k==="gates"&&bossLive?'<span class="dot"></span>':k==="status"&&S.freePts?'<span class="dot" style="background:var(--gold);box-shadow:0 0 8px var(--gold)"></span>':""}</button>`).join("");
+}
+
+/* ---------- onboarding ---------- */
+let ob={step:0,name:"",diff:"civilian",ex:["pushups","situps","squats","run"]};
+function onboarding(){
+  $("#nav").hidden=true;
+  let body="";
+  if(ob.step===0) body=`<div class="tag">Notice</div>
+    <h2 class="title" style="margin:10px 0">A System has bound itself to you</h2>
+    <p class="muted">It will issue a Daily Quest every day. Clear it to gain experience, level up and climb from E-Rank to S-Rank. Skip it and a Penalty Quest follows.</p>
+    <div class="row" style="margin-top:16px"><button class="btn primary" data-ob="next">Accept</button></div>`;
+  if(ob.step===1) body=`<div class="tag">Registration</div>
+    <h2 class="title" style="margin:10px 0">Hunter name</h2>
+    <form id="ob-form" class="stack"><input id="ob-name" maxlength="24" placeholder="Your name" value="${esc(ob.name)}" required>
+    <button class="btn primary" type="submit">Confirm</button></form>`;
+  if(ob.step===2) body=`<div class="tag">Assessment</div>
+    <h2 class="title" style="margin:10px 0">Starting condition</h2>
+    <div class="stack">${Object.keys(DIFF).map(k=>`<button class="opt ${ob.diff===k?"on":""}" data-ob="diff" data-k="${k}"><b>${DIFF[k].name}</b><span>${DIFF[k].desc} ${["pushups","situps","squats"].map(e=>DIFF[k].base[e]).join(" / ")} reps · ${DIFF[k].base.run} km</span></button>`).join("")}
+    <button class="btn primary" data-ob="next">Continue</button></div>`;
+  if(ob.step===3) body=`<div class="tag">Daily Quest</div>
+    <h2 class="title" style="margin:10px 0">Choose your exercises</h2>
+    <div class="chips" style="margin-bottom:14px">${Object.keys(EX).map(id=>`<button class="chip ${ob.ex.includes(id)?"on":""}" data-ob="ex" data-k="${id}">${EX[id].name} · ${fmt(DIFF[ob.diff].base[id],EX[id].unit)} ${EX[id].unit}</button>`).join("")}</div>
+    <p class="muted" style="font-size:13px">You can change these and their targets later under System.</p>
+    <button class="btn primary" data-ob="finish" ${ob.ex.length?"":"disabled"}>Begin</button>`;
+  $("#app").innerHTML=`<div class="splash"><div class="win" style="width:100%;text-align:left">${body}</div></div>`;
+  const f=$("#ob-form");
+  if(f){ $("#ob-name").focus(); f.onsubmit=e=>{ e.preventDefault(); ob.name=$("#ob-name").value.trim()||"Hunter"; ob.step=2; onboarding(); }; }
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-tab],[data-act],[data-ob]"); if(!t) return;
+  if(t.dataset.tab){ tab=t.dataset.tab; resetArm=false; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.ob){
+    const a=t.dataset.ob;
+    if(a==="next") ob.step++;
+    if(a==="diff") ob.diff=t.dataset.k;
+    if(a==="ex"){ const k=t.dataset.k; ob.ex=ob.ex.includes(k)?ob.ex.filter(x=>x!==k):[...ob.ex,k]; }
+    if(a==="finish"){
+      S=newState(ob.name||"Hunter",ob.diff,ob.ex); day(); ensureBoss(); persist(); tab="quests"; render();
+      notice("SYSTEM","Welcome, "+S.name,"Your first Daily Quest has arrived."); return;
+    }
+    onboarding(); return;
+  }
+  const a=t.dataset.act, k=t.dataset.k, n=parseFloat(t.dataset.n);
+  if(a==="ex") logEx(k,n);
+  else if(a==="pen") logPenalty(k,n);
+  else if(a==="side") toggleSide(k);
+  else if(a==="delside"){ S.side=S.side.filter(x=>x.id!==k); persist(); render(); }
+  else if(a==="gate") clearGate(k);
+  else if(a==="trial") passTrial();
+  else if(a==="rest") useRest();
+  else if(a==="alloc"){ if(S.freePts>0){ S.freePts--; S.stats[k]++; checkTitles(); persist(); render(); } }
+  else if(a==="title"){ S.title=k; persist(); render(); }
+  else if(a==="toggleex"){
+    const on=S.exercises.includes(k);
+    if(on && S.exercises.length===1) return notice("SYSTEM","Keep at least one exercise");
+    S.exercises=on?S.exercises.filter(x=>x!==k):[...S.exercises,k];
+    persist(); render();
+  }
+  else if(a==="export"){
+    const txt=JSON.stringify(S);
+    const done=()=>notice("SYSTEM","Backup copied","Paste it somewhere safe, like your notes app.");
+    try{ navigator.clipboard.writeText(txt).then(done,()=>showText(txt)); }catch(err){ showText(txt); }
+  }
+  else if(a==="showimport"){ $("#io").hidden=false; $("#io-text").value=""; $("#io-text").focus(); }
+  else if(a==="import"){
+    try{ const d=JSON.parse($("#io-text").value); if(!d||!d.exercises||!d.stats) throw 0; d.updatedAt=Date.now(); S=migrate(d); rollover(); persist(); render(); notice("SYSTEM","Backup restored"); }
+    catch(err){ notice("ERROR","That text isn't a valid backup","Copy the whole backup, from { to }.","red"); }
+  }
+  else if(a==="reset"){
+    if(!resetArm){ resetArm=true; render(); return; }
+    resetArm=false; S=null; try{localStorage.removeItem(LS);}catch(err){}
+    if(cloud.ref) cloud.ref.delete().catch(()=>{});
+    ob={step:0,name:"",diff:"civilian",ex:["pushups","situps","squats","run"]}; render();
+  }
+  else if(a==="cancelreset"){ resetArm=false; render(); }
+  else if(a==="boss") logBoss(k,n);
+  else if(a==="diffup"){ if(DIFF[k]){ S.diff=k; S.custom={}; S.diffSnooze=addDays(dk(),14); notice("DIFFICULTY UP","You are now "+DIFF[k].name,"New targets start tomorrow.","gold"); persist(); render(); } }
+  else if(a==="diffsnooze"){ S.diffSnooze=addDays(dk(),14); notice("SYSTEM","Understood","The System will ask again in 2 weeks."); persist(); render(); }
+  else if(a==="jobpick"){ jobPick=k; render(); }
+  else if(a==="jobset") setJob(k);
+  else if(a==="delbody"){ S.body=S.body.filter(x=>x.d!==k); persist(); render(); }
+  else if(a==="coach") runCoach();
+  else if(a==="coachapply"){ if(S.coach&&!S.coach.applied){ Object.assign(S.custom,S.coach.targets); S.coach.applied=true; notice("SYSTEM","Targets updated","They take effect with tomorrow's Daily Quest."); persist(); render(); } }
+  else if(a==="gengate") runGate();
+  else if(a==="aigate") clearAiGate();
+  else if(a==="resttimer"){ rt.open=true; restBuild(); }
+  else if(a==="rtclose"){ rt.open=false; rt.end=0; restBuild(); }
+  else if(a==="rtgo"){ rt.dur=n; rt.end=Date.now()+n*1000; chime(""); restBuild(); }
+  else if(a==="rtadd"){ if(rt.end){ rt.end+=15000; rt.dur+=15; restTick(); } }
+  else if(a==="rtstop"){ rt.end=0; restBuild(); }
+});
+function showText(txt){ $("#io").hidden=false; const ta=$("#io-text"); ta.value=txt; ta.select(); notice("SYSTEM","Copy the selected text","Your browser blocked automatic copying."); }
+document.addEventListener("submit",e=>{
+  if(e.target.id==="bodyform"){ e.preventDefault(); bodyAdd(); return; }
+  if(e.target.id!=="addside") return;
+  e.preventDefault();
+  const name=$("#sq-name").value.trim(); if(!name) return;
+  S.side.push({id:"s"+Date.now(),name,stat:$("#sq-stat").value}); persist(); render();
+});
+document.addEventListener("change",e=>{
+  if(!S) return;
+  const t=e.target;
+  if(t.id==="set-name"){ S.name=t.value.trim()||S.name; persist(); }
+  else if(t.id==="set-diff"){ S.diff=t.value; S.custom={}; persist(); render(); }
+  else if(t.id==="set-scale"){ S.autoScale=t.checked; persist(); }
+  else if(t.id==="set-sound"){ S.sound=t.checked; persist(); }
+  else if(t.id==="set-units"){ S.units=t.value; persist(); render(); }
+  else if(t.id==="set-job"){ setJob(t.value); }
+  else if(t.dataset.base){ const v=parseFloat(t.value); if(v>0){ S.custom=S.custom||{}; S.custom[t.dataset.base]=v; persist(); } }
+});
+
+/* ---------- boot ---------- */
+setInterval(()=>{
+  if(!S) return;
+  if(rollover()){ persist(); render(); return; }
+  const el=$("#timer"); if(el) el.textContent=timeLeft();
+},1000);
+
+S=migrate(loadLocal());
+(async()=>{
+  try{ sampleFn = window.claude && window.claude.use ? await window.claude.use("sample") : null; }catch(e){ sampleFn=null; }
+  sampleReady=true;
+  if(S && (tab==="log"||tab==="gates")) render();
+})();
+if(S){ if(rollover()) persist(); render(); initCloud(); }
+else {
+  let shown=false;
+  const show=()=>{ if(!shown){ shown=true; render(); } };
+  setTimeout(show,3500);
+  initCloud().then(show,show);
+}
+})();
+</script>
+</body>
+</html>
