@@ -3,13 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Personal level-up fitness tracker: daily quests, ranks, bosses and stats.">
 <meta name="theme-color" content="#060a13">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ascend">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-</head>
-<body>
 <title>Ascend</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -33,6 +39,7 @@
 }
 *{box-sizing:border-box}
 html,body{min-height:100%}
+html{overscroll-behavior-y:none;-webkit-text-size-adjust:100%}
 body{
   background:radial-gradient(120% 60% at 50% -10%,#10284d 0%,var(--bg) 60%) fixed,var(--bg);
   color:var(--fg);font:15px/1.5 var(--f-body);
@@ -45,7 +52,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   background:repeating-linear-gradient(0deg,rgba(124,196,255,.025) 0 1px,transparent 1px 3px)}
 #app{position:relative;z-index:1;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 h1,h2,h3{font-family:var(--f-display);margin:0;letter-spacing:.04em;text-wrap:balance}
-button{font:inherit;color:inherit;cursor:pointer}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+nav,.tag,.title,.stat b{-webkit-user-select:none;user-select:none}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
@@ -77,7 +85,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .btn[disabled]{opacity:.4;cursor:default}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .grow{flex:1;min-width:0}
-input,select,textarea{background:rgba(5,12,24,.8);border:1px solid rgba(124,196,255,.35);color:var(--fg);font:inherit;padding:9px 10px;width:100%;border-radius:0}
+input,select,textarea{background:rgba(5,12,24,.8);border:1px solid rgba(124,196,255,.35);color:var(--fg);font:inherit;font-size:16px;padding:9px 10px;width:100%;border-radius:0}
 label{font:600 11px/1.4 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 
 /* status */
@@ -200,7 +208,26 @@ table.mt td:first-child{font-family:var(--f-body)}
 .splash{min-height:60vh;display:grid;place-items:center;text-align:center}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-
+</head>
+<body>
+<script>
+// Install support + offline service worker (web app only; not used inside Claude).
+(() => {
+  let deferred = null;
+  const ping = () => window.dispatchEvent(new Event("ascend-pwa"));
+  window.ascendPWA = {
+    canPrompt: () => !!deferred,
+    isIOS: () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1),
+    isStandalone: () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true,
+    prompt: async () => { if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; ping(); },
+  };
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; ping(); });
+  addEventListener("appinstalled", () => { deferred = null; ping(); });
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+})();
+</script>
 <div id="app"><div class="splash"><div><div class="tag">System</div><p class="muted">Connecting…</p></div></div></div>
 <div id="notices" aria-live="polite"></div>
 <div id="restsheet" hidden></div>
@@ -995,6 +1022,16 @@ function vBody(){
   }
   return html;
 }
+// Install card: only shown when the page runs as the standalone web app (window.ascendPWA is set by index.html)
+function installCard(){
+  const P=window.ascendPWA;
+  if(!P || P.isStandalone()) return "";
+  let body;
+  if(P.canPrompt()) body=`<p style="margin:0 0 12px;font-size:13.5px">Put Ascend on your home screen. It opens full screen and works offline.</p><button class="btn primary" data-act="install">Install app</button>`;
+  else if(P.isIOS()) body=`<p style="margin:0;font-size:13.5px">In Safari, tap <b>Share</b> (the square with the arrow), then <b>Add to Home Screen</b>.</p>`;
+  else body=`<p style="margin:0;font-size:13.5px">Open your browser menu (⋮) and choose <b>Install app</b> or <b>Add to Home screen</b>.</p>`;
+  return `<section class="win gold"><div class="head"><span class="tag">Install</span></div>${body}</section>`;
+}
 function vSettings(){
   const st={synced:"Synced to your Claude account",error:"Cloud save failed. Progress is kept on this device.",local:"Saved on this device only"}[cloud.status];
   return `<section class="win">
@@ -1016,6 +1053,7 @@ function vSettings(){
   </section>
   ${S.job?`<section class="win"><div class="head"><span class="tag">Job</span></div>
     <label>Current job<select id="set-job">${Object.keys(JOBS).map(k=>`<option value="${k}" ${S.job===k?"selected":""}>${JOBS[k].name} · ${JOBS[k].desc}</option>`).join("")}</select></label></section>`:""}
+  ${installCard()}
   <section class="win">
     <div class="head"><span class="tag">Save data</span></div>
     <p style="margin:0 0 12px;font-size:13.5px">${st}</p>
@@ -1126,6 +1164,7 @@ document.addEventListener("click",e=>{
   }
   else if(a==="cancelreset"){ resetArm=false; render(); }
   else if(a==="boss") logBoss(k,n);
+  else if(a==="install"){ const P=window.ascendPWA; if(P) P.prompt().then(()=>render()); }
   else if(a==="diffup"){ if(DIFF[k]){ S.diff=k; S.custom={}; S.diffSnooze=addDays(dk(),14); notice("DIFFICULTY UP","You are now "+DIFF[k].name,"New targets start tomorrow.","gold"); persist(); render(); } }
   else if(a==="diffsnooze"){ S.diffSnooze=addDays(dk(),14); notice("SYSTEM","Understood","The System will ask again in 2 weeks."); persist(); render(); }
   else if(a==="jobpick"){ jobPick=k; render(); }
@@ -1162,6 +1201,7 @@ document.addEventListener("change",e=>{
 });
 
 /* ---------- boot ---------- */
+window.addEventListener("ascend-pwa",()=>{ if(S && tab==="settings") render(); });
 setInterval(()=>{
   if(!S) return;
   if(rollover()){ persist(); render(); return; }
